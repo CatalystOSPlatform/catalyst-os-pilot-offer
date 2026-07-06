@@ -71,6 +71,9 @@ class Component extends DCLogic {
   }
 
   componentDidMount() {
+    // In the grid the wrapper is loaded with ?static=1 — stay still there and only
+    // run the scripted tour when opened in the modal (loaded without ?static).
+    if (/[?&]static\b/.test(location.search)) return;
     this._alive = true;
     this.cur = { x: 606, y: 379 };
     this._pauseUntil = 0;
