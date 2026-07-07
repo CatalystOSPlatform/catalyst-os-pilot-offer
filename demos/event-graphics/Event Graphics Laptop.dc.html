@@ -159,6 +159,27 @@ class Component extends DCLogic {
     await this.sleep(120);
   }
 
+  async _scrollPanel(top, dur = 2600) {
+    const panel = this.idoc.querySelector('.panel');
+    if (!panel) return;
+    const from = panel.scrollTop;
+    const max = panel.scrollHeight - panel.clientHeight;
+    const target = Math.max(0, Math.min(max, top));
+    const delta = target - from;
+    if (Math.abs(delta) < 4) return;
+    const t0 = performance.now();
+    await new Promise(res => {
+      const step = (t) => {
+        const p = Math.min(1, (t - t0) / dur);
+        const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+        panel.scrollTop = from + delta * e;
+        if (p < 1 && this._alive) requestAnimationFrame(step); else res();
+      };
+      requestAnimationFrame(step);
+    });
+    await this.sleep(120);
+  }
+
   async _move(x, y, dur = 620) {
     const from = { ...this.cur }, t0 = performance.now();
     await new Promise(res => {
@@ -245,6 +266,16 @@ class Component extends DCLogic {
 
   async _runOnce() {
     const d = this.idoc;
+
+    // ── 0. Reveal the whole control panel: scroll all the way down, then back up ──
+    const panel = d.querySelector('.panel');
+    if (panel) {
+      this._caption('Every control for the campaign, in one panel');
+      await this._scrollPanel(panel.scrollHeight, 2800);
+      await this.sleep(1000);
+      await this._scrollPanel(0, 2800);
+      await this.sleep(600);
+    }
 
     // ── 1. Download picker ──
     await this._scrollTo(d.getElementById('dl_dd_toggle'), 40);
