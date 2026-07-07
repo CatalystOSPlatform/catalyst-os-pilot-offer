@@ -61,10 +61,17 @@ class Component extends DCLogic {
   }
 
   componentDidMount() {
-    if (/[?&]static\b/.test(location.search)) return;
-    this._alive = true;
-    this.cur = { x: 606, y: 300 };
-    this._boot();
+    // The embedded COS dashboard runs its own auto-tour; this wrapper only
+    // scales the screen to fit. No competing cursor animation here.
+    this._fit = () => {
+      document.querySelectorAll('.hc-fit-inner').forEach((inner) => {
+        const box = inner.parentElement;
+        if (!box) return;
+        inner.style.transform = 'scale(' + (box.clientWidth / 1440) + ')';
+      });
+    };
+    this._fit();
+    window.addEventListener('resize', this._fit);
   }
   componentWillUnmount() { this._alive = false; }
   sleep(ms) { return new Promise(r => setTimeout(r, ms)); }

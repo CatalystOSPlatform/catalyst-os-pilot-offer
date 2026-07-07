@@ -509,9 +509,10 @@ class Component extends DCLogic {
     this._esc = (e) => { if (e.key === 'Escape') this.setState({ openApp: null, menuOpen: false }); };
     window.addEventListener('keydown', this._esc);
 
-    // ---- auto-play demo reel ----
+    // ---- auto-play demo reel (only when NOT loaded static in the grid preview) ----
     this._runId = 0;
     this._timers = [];
+    if (/[?&]static\b/.test(location.search)) return;
     this._onDown = () => this.pauseTour();
     this._boot = setTimeout(() => {
       const root = document.getElementById('cos-root');
@@ -602,15 +603,16 @@ class Component extends DCLogic {
   }
 
   async runTour(id) {
-    const TOUR = ['webinar','postwriter','socialgraphics','storyselling','linkedingraphics','factsheetbuilder','deckbuilder','commentary','ddq','brandguide','dashboards','factsheet','deck','clientsocialpost','clientlinkedingraphics','clientnewsletter','clientemail'];
+    // Only the two live-demo builders get the hover + menu treatment.
+    const TOUR = ['webinar','socialgraphics'];
     try {
       const sc = this.getScroller();
-      // 1. reveal the whole page
+      // 1. scroll down to reveal the whole page
       if (sc) { await this.smoothTo(sc.scrollHeight, id); await this.wait(1000, id); }
-      // 2. back to the top
+      // 2. scroll back up to the top
       await this.smoothTo(0, id);
       await this.wait(700, id);
-      // 3. visit every builder: highlight -> modal -> close
+      // 3. hover + open the modal menu on just two builders
       for (const appId of TOUR) {
         if (id !== this._runId) return;
         const btn = document.querySelector('[data-app="' + appId + '"]');
@@ -618,13 +620,14 @@ class Component extends DCLogic {
         this.highlight(btn, true);
         await this.wait(500, id);
         this.open(appId);
-        await this.wait(1600, id);
+        await this.wait(1800, id);
         this.close();
         this.highlight(btn, false);
-        await this.wait(550, id);
+        await this.wait(650, id);
       }
-      // 4. loop
-      await this.wait(500, id);
+      // 4. settle back at the top, then loop
+      await this.smoothTo(0, id);
+      await this.wait(900, id);
       if (id === this._runId) this.startTour();
     } catch (e) { /* tour cancelled */ }
   }
@@ -682,7 +685,7 @@ class Component extends DCLogic {
     const now = this.state.now;
     const h = now.getHours();
     const greetWord = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-    const team = this.props.teamName || 'Havener team';
+    const team = this.props.teamName || 'team';
     const timeStr = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const dateStr = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
 
